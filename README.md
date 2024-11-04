@@ -1,4 +1,5 @@
 About the Project
+
 The Hospital Management System is built to automate hospital tasks, such as registering patients, managing doctor details, and scheduling appointments. The project uses Java for its core logic and JDBC for database interactions.
 
 Features
