@@ -19,11 +19,13 @@ Database Creation Steps
 Create the database: Start by creating a new database named Hospital:
 
 sql
+
 CREATE DATABASE Hospital;
 USE Hospital;
 
 Create the Patients table:
 sql
+
 CREATE TABLE Patients (
     ID INT PRIMARY KEY AUTO_INCREMENT,
     Name VARCHAR(100) NOT NULL,
@@ -33,6 +35,7 @@ CREATE TABLE Patients (
 
 Create the Doctors table:
 sql
+
 CREATE TABLE Doctors (
     ID INT PRIMARY KEY AUTO_INCREMENT,
     Name VARCHAR(100) NOT NULL,
@@ -41,6 +44,7 @@ CREATE TABLE Doctors (
 
 Create the Appointments table:
 sql
+
 CREATE TABLE Appointments (
     ID INT PRIMARY KEY AUTO_INCREMENT,
     PatID INT NOT NULL,
