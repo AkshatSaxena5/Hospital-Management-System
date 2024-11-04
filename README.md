@@ -3,6 +3,7 @@ About the Project
 The Hospital Management System is built to automate hospital tasks, such as registering patients, managing doctor details, and scheduling appointments. The project uses Java for its core logic and JDBC for database interactions.
 
 Features
+
 Patient: Add, view, and check patient records.
 Doctor: View and check doctor records.
 HospitalManagementSystem: Coordinate hospital operations and manage appointments.
@@ -16,6 +17,7 @@ JDBC (Java Database Connectivity): To connect and interact with the database.
 MySQL (or any RDBMS): Backend database for storing records.
 
 Database Creation Steps
+
 Create the database: Start by creating a new database named Hospital:
 
 sql
@@ -55,6 +57,7 @@ CREATE TABLE Appointments (
 );
 
 Next Steps
+
 Connect Java to MySQL: Ensure your HospitalManagementSystem.java file has the JDBC URL and credentials to connect to Hospital database.
 Test Database Operations: Implement Java methods for CRUD operations in Patient.java, Doctor.java, and HospitalManagementSystem.java to interact with these tables.
 This setup will give you a foundational database schema to manage patients, doctors, and appointments in your hospital management system.
