@@ -1,115 +1,170 @@
-import java.security.PublicKey;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.*;
-import java.util.Scanner;
-public class HospitalManagementSystem {
-    private static final String url="jdbc:mysql://localhost:3306/hospital";
-    private static final String username="root";
-    private static final String password="Akshat@12345";
-    public static void main(String[] args) {
+import java.util.List;
+
+public class HospitalManagementSystem extends JFrame {
+    private static final String url = "jdbc:mysql://localhost:3306/hospital";
+    private static final String username = "root";
+    private static final String password = "Akshat@12345";
+
+    private Connection connection;
+    private Patient patient;
+    private Doctor doctor;
+
+    public HospitalManagementSystem() {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
+            connection = DriverManager.getConnection(url, username, password);
+            patient = new Patient(connection);
+            doctor = new Doctor(connection);
+        } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error connecting to database", "Error", JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
         }
-        Scanner scanner = new Scanner(System.in);
-        try {
-            Connection connection = DriverManager.getConnection(url, username, password);
-            Patient patient = new Patient(connection, scanner);
-            Doctor doctor = new Doctor(connection);
-            while (true) {
-                System.out.println("HOSPITAL MANAGEMENT SYSTEM ");
-                System.out.println("1. Add Patient");
-                System.out.println("2. View Patients");
-                System.out.println("3. View Doctors");
-                System.out.println("4. Book Appointment");
-                System.out.println("5. Exit");
-                System.out.println("Enter your choice: ");
-                int choice = scanner.nextInt();
-                switch (choice) {
-                    case 1:
-                        // Add Patient
-                        patient.addPatient();
-                        System.out.println();
-                        break;
-                    case 2:
-                        // View Patient
-                        patient.viewPatients();
-                        System.out.println();
-                        break;
-                    case 3:
-                        // View Doctors
-                        doctor.viewDoctors();
-                        System.out.println();
-                        break;
-                    case 4:
-                        // Book Appointment
-                        bookAppointment(patient, doctor, connection, scanner);
-                        System.out.println();
-                        break;
-                    case 5:
-                        System.out.println("THANK YOU! FOR USING HOSPITAL MANAGEMENT SYSTEM!!");
-                        return;
-                    default:
-                        System.out.println("Enter valid choice!!!");
-                        break;
+
+        // Setup main frame properties
+        setTitle("Hospital Management System");
+        setSize(800, 300);  // Increased height for heading
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        // Heading
+        JLabel headingLabel = new JLabel("Welcome to India's Best Hospital", SwingConstants.CENTER);
+        headingLabel.setFont(new Font("Arial", Font.BOLD, 24)); // Set font size and style
+        headingLabel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0)); // Add some padding
+
+        // Main button panel (Horizontal layout)
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 20)); // Horizontal layout with spacing
+
+        // Buttons
+        JButton addPatientButton = new JButton("Add Patient");
+        JButton viewPatientsButton = new JButton("View Patients");
+        JButton viewDoctorsButton = new JButton("View Doctors");
+        JButton bookAppointmentButton = new JButton("Book Appointment");
+        JButton exitButton = new JButton("Exit");
+
+        // Add buttons to panel
+        buttonPanel.add(addPatientButton);
+        buttonPanel.add(viewPatientsButton);
+        buttonPanel.add(viewDoctorsButton);
+        buttonPanel.add(bookAppointmentButton);
+        buttonPanel.add(exitButton);
+
+        // Add components to the frame
+        add(headingLabel, BorderLayout.NORTH); // Add heading at the top
+        add(buttonPanel, BorderLayout.CENTER); // Add buttons in the center
+
+        // Button Listeners
+        addPatientButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String name = JOptionPane.showInputDialog("Enter Patient Name:");
+                String ageStr = JOptionPane.showInputDialog("Enter Patient Age:");
+                String gender = JOptionPane.showInputDialog("Enter Patient Gender:");
+                int age = Integer.parseInt(ageStr);
+
+                if (patient.addPatient(name, age, gender)) {
+                    JOptionPane.showMessageDialog(null, "Patient added successfully!");
+                } else {
+                    JOptionPane.showMessageDialog(null, "Failed to add patient.");
                 }
             }
-        }
-        catch (SQLException e){
-            e.printStackTrace();
-        }
-    }
-    public static void bookAppointment(Patient patient,Doctor doctor,
-                                       Connection connection,Scanner scanner){
-        System.out.print("Enter Patient Id: ");
-        int patientId = scanner.nextInt();
-        System.out.print("Enter Doctor Id: ");
-        int doctorId = scanner.nextInt();
-        System.out.print("Enter appointment date (YYYY-MM-DD): ");
-        String appointmentDate = scanner.next();
-        if(patient.getPatientById(patientId) && doctor.getDoctorById(doctorId)){
-            if(checkDoctorAvailability(doctorId, appointmentDate, connection)){
-                String appointmentQuery = "INSERT INTO appointments(patient_id, doctor_id, appointment_date) VALUES(?, ?, ?)";
-                try {
-                    PreparedStatement preparedStatement = connection.prepareStatement(appointmentQuery);
-                    preparedStatement.setInt(1, patientId);
-                    preparedStatement.setInt(2, doctorId);
-                    preparedStatement.setString(3, appointmentDate);
-                    int rowsAffected = preparedStatement.executeUpdate();
-                    if(rowsAffected>0){
-                        System.out.println("Appointment Booked!");
-                    }else{
-                        System.out.println("Failed to Book Appointment!");
+        });
+
+        viewPatientsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List<Object[]> patients = patient.viewPatients();
+                String[] columnNames = {"ID", "Name", "Age", "Gender"};
+                JTable table = new JTable(patients.toArray(new Object[0][0]), columnNames);
+                JOptionPane.showMessageDialog(null, new JScrollPane(table), "View Patients", JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+
+        viewDoctorsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List<Object[]> doctors = doctor.viewDoctors();
+                String[] columnNames = {"ID", "Name", "Specialization"};
+                JTable table = new JTable(doctors.toArray(new Object[0][0]), columnNames);
+                JOptionPane.showMessageDialog(null, new JScrollPane(table), "View Doctors", JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+
+        bookAppointmentButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String patientIdStr = JOptionPane.showInputDialog("Enter Patient ID:");
+                String doctorIdStr = JOptionPane.showInputDialog("Enter Doctor ID:");
+                String appointmentDate = JOptionPane.showInputDialog("Enter appointment date (YYYY-MM-DD):");
+                int patientId = Integer.parseInt(patientIdStr);
+                int doctorId = Integer.parseInt(doctorIdStr);
+
+                if (patient.getPatientById(patientId) && doctor.getDoctorById(doctorId)) {
+                    if (checkDoctorAvailability(doctorId, appointmentDate, connection)) {
+                        if (bookAppointment(patientId, doctorId, appointmentDate)) {
+                            JOptionPane.showMessageDialog(null, "Appointment booked successfully!");
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Failed to book appointment.");
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Doctor not available on this date!");
                     }
-                }catch (SQLException e){
-                    e.printStackTrace();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Invalid patient or doctor ID.");
                 }
-            }else{
-                System.out.println("Doctor not available on this date!!");
             }
-        }else{
-            System.out.println("Either doctor or patient doesn't exist!!!");
+        });
+
+        exitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+    }
+
+    private boolean bookAppointment(int patientId, int doctorId, String appointmentDate) {
+        String query = "INSERT INTO appointments(patient_id, doctor_id, appointment_date) VALUES(?, ?, ?)";
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1, patientId);
+            preparedStatement.setInt(2, doctorId);
+            preparedStatement.setString(3, appointmentDate);
+            int rowsAffected = preparedStatement.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
     }
-    public static boolean checkDoctorAvailability(int doctorId,String appointmentDate,
-                                                  Connection connection){
-        String query ="SELECT COUNT(*) FROM appointments WHERE doctor_id = ? AND appointment_date = ?";
-        try{
+
+    private static boolean checkDoctorAvailability(int doctorId, String appointmentDate, Connection connection){
+        String query = "SELECT COUNT(*) FROM appointments WHERE doctor_id = ? AND appointment_date = ?";
+        try {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setInt(1, doctorId);
             preparedStatement.setString(2, appointmentDate);
             ResultSet resultSet = preparedStatement.executeQuery();
-            if(resultSet.next()){
+            if (resultSet.next()) {
                 int count = resultSet.getInt(1);
-                if(count==0){
-                    return true;
-                }else{
-                    return false;
-                }
+                return count == 0;
             }
-        } catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            HospitalManagementSystem hms = new HospitalManagementSystem();
+            hms.setVisible(true);
+        });
     }
 }
