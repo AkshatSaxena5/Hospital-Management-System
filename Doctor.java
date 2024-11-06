@@ -2,45 +2,37 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Scanner;
+import java.util.*;
 public class Doctor {
     private Connection connection;
     public Doctor(Connection connection){
         this.connection = connection;
     }
-    public void viewDoctors(){
-        String query = "select * from doctors";
-        try{
+    public List<Object[]> viewDoctors() {
+        List<Object[]> doctorList = new ArrayList<>();
+        String query = "SELECT * FROM doctors";
+        try {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             ResultSet resultSet = preparedStatement.executeQuery();
-            System.out.println("Doctors: ");
-            System.out.println("+------------+--------------------+------------------+");
-            System.out.println("| Doctor Id  | Name               | Specialization   |");
-            System.out.println("+------------+--------------------+------------------+");
-            while(resultSet.next()){
+            while (resultSet.next()) {
                 int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
                 String specialization = resultSet.getString("specialization");
-                System.out.printf("| %-10s | %-18s | %-16s |\n", id, name, specialization);
-                System.out.println("+------------+--------------------+------------------+");
+                doctorList.add(new Object[]{id, name, specialization});
             }
-
-        }catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
+        return doctorList;
     }
     public boolean getDoctorById(int id){
         String query = "SELECT * FROM doctors WHERE id = ?";
-        try{
+        try {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setInt(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
-            if(resultSet.next()){
-                return true;
-            }else{
-                return false;
-            }
-        }catch (SQLException e){
+            return resultSet.next();
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
